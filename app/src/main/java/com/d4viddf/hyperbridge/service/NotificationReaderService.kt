@@ -78,6 +78,7 @@ import com.d4viddf.hyperbridge.service.translators.NavTranslator
 import com.d4viddf.hyperbridge.service.translators.ProgressTranslator
 import com.d4viddf.hyperbridge.service.translators.ScreenRecordingSavedTranslator
 import com.d4viddf.hyperbridge.service.translators.ScreenRecordingTranslator
+import com.d4viddf.hyperbridge.service.translators.TextPercentageExtractor
 import com.d4viddf.hyperbridge.service.translators.StandardTranslator
 import com.d4viddf.hyperbridge.service.translators.SystemUpdateTranslator
 import com.d4viddf.hyperbridge.service.translators.TimerTranslator
@@ -323,6 +324,9 @@ class NotificationReaderService : NotificationListenerService() {
         serviceScope.launch { preferences.limitModeFlow.collectLatest { currentMode = it } }
         serviceScope.launch { preferences.appPriorityListFlow.collectLatest { appPriorityList = it } }
         serviceScope.launch { preferences.globalBlockedTermsFlow.collectLatest { globalBlockedTerms = it } }
+        serviceScope.launch {
+            preferences.progressDiscountKeywordsFlow.collectLatest { TextPercentageExtractor.customKeywords = it }
+        }
         serviceScope.launch { preferences.isDndModeEnabledFlow.collectLatest { isDndModeEnabled = it } }
         serviceScope.launch { preferences.autoDetectDndFlow.collectLatest { autoDetectDnd = it } }
 
@@ -2045,19 +2049,8 @@ class NotificationReaderService : NotificationListenerService() {
                 (isDownload && isOngoing)
     }
 
-    private fun extractTextPercentage(title: String?, text: String?): Int? {
-        val pattern = Regex("""\b(\d{1,3})\s*%""")
-        val textMatch = text?.let { pattern.find(it) }
-        val titleMatch = title?.let { pattern.find(it) }
-        val match = textMatch ?: titleMatch
-        if (match != null) {
-            val value = match.groupValues[1].toIntOrNull()
-            if (value != null && value in 0..100) {
-                return value
-            }
-        }
-        return null
-    }
+    private fun extractTextPercentage(title: String?, text: String?): Int? =
+        TextPercentageExtractor.extract(title, text)
 
     private fun resolveTitle(sbn: StatusBarNotification): String {
         val extras = sbn.notification.extras
