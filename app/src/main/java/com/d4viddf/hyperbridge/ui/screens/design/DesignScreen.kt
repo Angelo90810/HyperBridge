@@ -101,7 +101,7 @@ fun DesignScreen(
     onSettingsClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
     val themeRepo = remember { ThemeRepository(context.applicationContext) }
     val translatorViewModel: com.d4viddf.hyperbridge.ui.screens.translators.TranslatorViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 

@@ -118,7 +118,7 @@ fun DiagnosticsScreen(
     onNavigateToHealth: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
     val state by DiagnosticsStore.state.collectAsState()
     val selectedApps by preferences.allowedPackagesFlow.collectAsState(initial = emptySet())
     val confirmedApps by preferences.floatingSetupConfirmedPackagesFlow.collectAsState(initial = emptySet())

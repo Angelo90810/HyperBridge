@@ -96,7 +96,7 @@ fun BehaviourMenuContent(onNavigate: (CreatorRoute) -> Unit) {
 fun ThemeBehaviourContent() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     val globalConfig by preferences.globalConfigFlow.collectAsState(initial = IslandConfig(
         isFloat = false,
@@ -122,7 +122,7 @@ fun ThemeBehaviourContent() {
 fun NotificationTypesContent() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     // Read global states, defaulting to everything enabled
     val enabledTypesStr by preferences.globalNotificationTypesFlow.collectAsState(

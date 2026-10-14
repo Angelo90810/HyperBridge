@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 
 class WidgetTranslator(context: Context) : BaseTranslator(context) {
 
-    private val preferences = AppPreferences(context)
+    private val preferences = AppPreferences.getInstance(context)
 
     suspend fun translate(widgetId: Int): HyperIslandData {
         val config = preferences.getWidgetConfigFlow(widgetId).first()

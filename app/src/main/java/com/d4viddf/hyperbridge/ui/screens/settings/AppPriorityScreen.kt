@@ -91,7 +91,7 @@ data class PriorityAppInfo(val name: String, val packageName: String)
 fun AppPriorityScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
     val packageManager = context.packageManager
 
     // Load live data from DataStore

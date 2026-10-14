@@ -50,7 +50,7 @@ fun PermanentIslandConfigScreen(
     onManageSources: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val prefs = AppPreferences(context)
+    val prefs = AppPreferences.getInstance(context)
     val widgetRepository = androidx.compose.runtime.remember { CustomWidgetRepository(context) }
     val scope = rememberCoroutineScope()
 

@@ -153,7 +153,7 @@ fun HomeScreen(
                 }
             }
         ) { padding ->
-            val prefs = remember { com.d4viddf.hyperbridge.data.AppPreferences(context) }
+            val prefs = remember { com.d4viddf.hyperbridge.data.AppPreferences.getInstance(context) }
             val showWarning by prefs.featuredPermissionWarningFlow.collectAsState(initial = false)
             val scope = androidx.compose.runtime.rememberCoroutineScope()
 

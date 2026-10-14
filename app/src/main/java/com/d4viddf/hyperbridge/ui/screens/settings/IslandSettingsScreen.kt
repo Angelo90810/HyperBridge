@@ -36,7 +36,7 @@ fun IslandSettingsScreen(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     val globalConfig by preferences.globalConfigFlow.collectAsState(initial = IslandConfig(
         isFloat = false,

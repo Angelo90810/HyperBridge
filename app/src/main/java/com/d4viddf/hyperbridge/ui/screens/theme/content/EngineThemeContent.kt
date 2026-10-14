@@ -44,7 +44,7 @@ fun EngineThemeContent(
     onEngineChange: (Boolean?) -> Unit
 ) {
     val context = LocalContext.current
-    val prefs = remember { AppPreferences(context) }
+    val prefs = remember { AppPreferences.getInstance(context) }
     val isShizukuInstalled = remember { com.d4viddf.hyperbridge.util.ShizukuManager.isShizukuInstalled(context) }
     val isShizukuRunning by com.d4viddf.hyperbridge.util.ShizukuManager.isShizukuRunning.collectAsState()
     val isPermissionGranted by com.d4viddf.hyperbridge.util.ShizukuManager.isPermissionGranted.collectAsState()

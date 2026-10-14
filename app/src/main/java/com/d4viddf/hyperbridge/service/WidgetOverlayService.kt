@@ -51,7 +51,7 @@ class WidgetOverlayService : Service() {
         super.onCreate()
         Log.d(TAG, "Widget Overlay Service Created")
 
-        preferences = AppPreferences(applicationContext)
+        preferences = AppPreferences.getInstance(applicationContext)
         widgetTranslator = WidgetTranslator(applicationContext)
         notificationManager = getSystemService(NotificationManager::class.java)
 

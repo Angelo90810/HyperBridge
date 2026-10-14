@@ -48,7 +48,7 @@ class BootReceiver : BroadcastReceiver() {
                         Log.d("HyperBridge", "Migration progress: $progress%")
                     }
                     // Trigger AppPreferences initialization to run SharedPreferences migrations
-                    com.d4viddf.hyperbridge.data.AppPreferences(context)
+                    com.d4viddf.hyperbridge.data.AppPreferences.getInstance(context)
                 }
             } catch (e: Exception) {
                 Log.e("HyperBridge", "Error during migration in BootReceiver", e)

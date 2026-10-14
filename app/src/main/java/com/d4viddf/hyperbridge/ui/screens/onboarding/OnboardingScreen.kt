@@ -129,7 +129,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     val canProceedCompat = isXiaomi && isCompatibleOS
     
     val context = LocalContext.current
-    val prefs = remember { AppPreferences(context) }
+    val prefs = remember { AppPreferences.getInstance(context) }
     val useNativeLiveUpdates by prefs.useNativeLiveUpdates.collectAsState(initial = false)
     val needsShizuku = !useNativeLiveUpdates && isCN
 
@@ -1504,7 +1504,7 @@ fun ListenerPermissionPagePreview() {
 @Composable
 fun TriggersConfigPagePreview() {
     HyperBridgeTheme {
-        TriggersConfigPage(prefs = AppPreferences(LocalContext.current))
+        TriggersConfigPage(prefs = AppPreferences.getInstance(LocalContext.current))
     }
 }
 
@@ -1512,7 +1512,7 @@ fun TriggersConfigPagePreview() {
 @Composable
 fun PriorityEducationPagePreview() {
     HyperBridgeTheme {
-        PriorityEducationPage(prefs = AppPreferences(LocalContext.current))
+        PriorityEducationPage(prefs = AppPreferences.getInstance(LocalContext.current))
     }
 }
 
@@ -1520,7 +1520,7 @@ fun PriorityEducationPagePreview() {
 @Composable
 fun BehaviorConfigPagePreview() {
     HyperBridgeTheme {
-        BehaviorConfigPage(prefs = AppPreferences(LocalContext.current))
+        BehaviorConfigPage(prefs = AppPreferences.getInstance(LocalContext.current))
     }
 }
 
@@ -1536,7 +1536,7 @@ fun CustomizationPagePreview() {
 @Composable
 fun EngineConfigPagePreview() {
     HyperBridgeTheme {
-        EngineConfigPage(prefs = AppPreferences(LocalContext.current))
+        EngineConfigPage(prefs = AppPreferences.getInstance(LocalContext.current))
     }
 }
 
@@ -1552,7 +1552,7 @@ fun OptimizationPagePreview() {
 @Composable
 fun AutoHidePagePreview(){
     HyperBridgeTheme {
-        AutoHideConfigPage(prefs = AppPreferences(LocalContext.current))
+        AutoHideConfigPage(prefs = AppPreferences.getInstance(LocalContext.current))
     }
 }
 
@@ -1631,7 +1631,7 @@ fun PermanentIslandConfigPage(prefs: AppPreferences) {
 @Composable
 fun PermanentIslandConfigPagePreview() {
     HyperBridgeTheme {
-        PermanentIslandConfigPage(prefs = AppPreferences(LocalContext.current))
+        PermanentIslandConfigPage(prefs = AppPreferences.getInstance(LocalContext.current))
     }
 }
 

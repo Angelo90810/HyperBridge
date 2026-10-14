@@ -61,7 +61,7 @@ enum class SortOption { NAME_AZ, NAME_ZA }
 class AppListViewModel(application: Application) : AndroidViewModel(application) {
 
     private val packageManager = application.packageManager
-    private val preferences = AppPreferences(application)
+    private val preferences = AppPreferences.getInstance(application)
     private val cacheManager = AppCacheManager(application)
 
     // [NEW] Theme Repository to resolve behavior overrides

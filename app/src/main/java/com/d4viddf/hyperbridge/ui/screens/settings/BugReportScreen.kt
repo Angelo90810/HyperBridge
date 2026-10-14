@@ -144,7 +144,7 @@ fun BugReportScreen(
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
     val themeRepo = remember { ThemeRepository(context) }
 
     // Form inputs

@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun DndSettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val prefs = remember { AppPreferences(context) }
+    val prefs = remember { AppPreferences.getInstance(context) }
     val isDndModeEnabled by prefs.isDndModeEnabledFlow.collectAsState(initial = false)
     val autoDetectDnd by prefs.autoDetectDndFlow.collectAsState(initial = false)
     val scope = rememberCoroutineScope()

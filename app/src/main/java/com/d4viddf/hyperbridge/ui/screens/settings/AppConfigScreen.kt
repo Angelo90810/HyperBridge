@@ -186,7 +186,7 @@ fun AppConfigScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
 
     var currentSubscreen by remember { mutableStateOf<AppConfigSubscreen?>(null) }
 
@@ -1740,7 +1740,7 @@ fun AppConfigWidgetChildItem(
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
     val config by preferences.getWidgetConfigFlow(widgetId).collectAsState(initial = WidgetConfig())
     val providerInfo = remember(widgetId) { WidgetManager.getWidgetInfo(context, widgetId) }
 

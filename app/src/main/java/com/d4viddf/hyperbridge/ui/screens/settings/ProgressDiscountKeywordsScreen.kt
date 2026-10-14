@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 fun ProgressDiscountKeywordsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val keywords by preferences.progressDiscountKeywordsFlow.collectAsState(initial = emptySet())

@@ -78,7 +78,7 @@ class ThemeInstallerActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val themeRepo = ThemeRepository(applicationContext)
-        val prefs = AppPreferences(applicationContext)
+        val prefs = AppPreferences.getInstance(applicationContext)
         val db = AppDatabase.getDatabase(applicationContext)
         val widgetRepo = CustomWidgetRepository(applicationContext)
         val translatorRepo = TranslatorRepository(applicationContext, db.translatorDao())

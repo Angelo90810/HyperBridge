@@ -1044,6 +1044,17 @@ class AppPreferences internal constructor(
 
     companion object {
         const val SYSTEM_ISLAND_DEFAULT_TIMEOUT = 4
+
+        // A single Room observer and migration owner for the whole app process.
+        @Volatile
+        private var sharedInstance: AppPreferences? = null
+
+        fun getInstance(context: Context): AppPreferences =
+            sharedInstance ?: synchronized(this) {
+                sharedInstance ?: AppPreferences(context.applicationContext).also {
+                    sharedInstance = it
+                }
+            }
     }
 
     @androidx.annotation.VisibleForTesting

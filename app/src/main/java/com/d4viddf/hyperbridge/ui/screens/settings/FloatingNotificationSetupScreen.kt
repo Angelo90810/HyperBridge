@@ -122,7 +122,7 @@ enum class FloatingFilterOption {
 @Composable
 fun FloatingNotificationSetupScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
     val selectedPackages by preferences.allowedPackagesFlow.collectAsState(initial = emptySet())
     val confirmedPackages by preferences.floatingSetupConfirmedPackagesFlow.collectAsState(initial = emptySet())
     val scope = rememberCoroutineScope()

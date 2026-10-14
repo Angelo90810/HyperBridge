@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun EngineSettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val prefs = remember { AppPreferences(context) }
+    val prefs = remember { AppPreferences.getInstance(context) }
     val repo = remember { ThemeRepository(context) }
     val scope = rememberCoroutineScope()
 

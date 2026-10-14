@@ -92,7 +92,7 @@ fun SmartActionsSettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     val config by preferences.smartActionsConfigFlow.collectAsState(initial = SmartActionsConfig.DISABLED)
     val activeApps by viewModel.activeAppsState.collectAsState()

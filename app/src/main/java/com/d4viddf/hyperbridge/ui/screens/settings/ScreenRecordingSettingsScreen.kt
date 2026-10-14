@@ -79,7 +79,7 @@ fun ScreenRecordingSettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     val leftDesign by preferences.screenRecordingLeftDesignFlow.collectAsState(
         initial = ScreenRecordingLeftDesign.ICON_AND_TEXT

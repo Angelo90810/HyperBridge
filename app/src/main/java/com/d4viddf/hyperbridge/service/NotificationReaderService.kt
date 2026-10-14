@@ -263,7 +263,7 @@ class NotificationReaderService : NotificationListenerService() {
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
         )
         
-        preferences = AppPreferences(applicationContext)
+        preferences = AppPreferences.getInstance(applicationContext)
         createChannels()
 
         // [INIT] Theme Engine

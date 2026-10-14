@@ -110,7 +110,7 @@ fun WidgetPickerScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
 
     val favorites by preferences.favoriteWidgetAppsFlow.collectAsState(initial = emptySet())
 

@@ -116,7 +116,7 @@ fun WidgetConfigScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val appPreferences = remember { AppPreferences(context.applicationContext) }
+    val appPreferences = remember { AppPreferences.getInstance(context.applicationContext) }
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
 

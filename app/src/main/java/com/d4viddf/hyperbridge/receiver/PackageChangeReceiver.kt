@@ -43,7 +43,7 @@ class PackageChangeReceiver : BroadcastReceiver() {
     suspend fun handleNewPackage(
         context: Context?,
         packageName: String,
-        preferences: AppPreferences? = context?.let { AppPreferences(it) },
+        preferences: AppPreferences? = context?.let { AppPreferences.getInstance(it) },
         isLibraryApp: Boolean = context?.let { ctx ->
             packageName != ctx.packageName &&
             packageName != com.d4viddf.hyperbridge.service.recording.ScreenRecordingClassifier.PACKAGE_NAME &&

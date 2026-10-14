@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
 fun MainRootNavigation(onExit: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     // Let's use lazy delegates
     val database by remember { lazy { AppDatabase.getDatabase(context) } }

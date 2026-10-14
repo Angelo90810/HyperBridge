@@ -5,11 +5,8 @@ import com.d4viddf.hyperbridge.data.theme.ThemeRepository
 import com.d4viddf.hyperbridge.models.NavContent
 import com.d4viddf.hyperbridge.models.theme.HyperTheme
 import com.d4viddf.hyperbridge.models.theme.NavigationModule
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 
 /**
  * A fast, in-memory resolver for Translators to look up effective
@@ -17,7 +14,7 @@ import kotlinx.coroutines.flow.stateIn
  */
 class ConfigResolver(context: Context) {
 
-    private val preferences = AppPreferences(context)
+    private val preferences = AppPreferences.getInstance(context)
     private val themeRepo = ThemeRepository(context)
 
     // Keep a hot flow of the active theme in memory
@@ -43,20 +40,15 @@ class ConfigResolver(context: Context) {
 
         // 1. Resolve Engine
         val effectiveEngine = themeAppOverride?.useNativeLiveUpdates
-            ?: preferences.useNativeLiveUpdates.stateIn(CoroutineScope(Dispatchers.IO), SharingStarted.Eagerly, true).value
+            ?: preferences.useNativeLiveUpdates.first()
 
         // 2. Resolve Visuals
         val effectiveVisuals = themeAppOverride?.navigation
 
         // 3. Resolve Content (A bit tricky as it requires reading DB, but we do it fast)
         // Note: For absolute zero-latency, you might want to cache globalNavLayoutFlow in memory too!
-        var leftContent = NavContent.DISTANCE_ETA
-        var rightContent = NavContent.INSTRUCTION
-
-        preferences.getEffectiveNavLayout(packageName).collect { (l, r) ->
-            leftContent = l
-            rightContent = r
-        }
+        // collect() never finishes on Room flows. This is a one-shot lookup.
+        val (leftContent, rightContent) = preferences.getEffectiveNavLayout(packageName).first()
 
         return ResolvedNavConfig(
             useNativeEngine = effectiveEngine,
