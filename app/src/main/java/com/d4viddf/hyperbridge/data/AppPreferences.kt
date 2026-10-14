@@ -1048,13 +1048,27 @@ class AppPreferences internal constructor(
         // A single Room observer and migration owner for the whole app process.
         @Volatile
         private var sharedInstance: AppPreferences? = null
+        @Volatile
+        private var directBootInstance: AppPreferences? = null
 
-        fun getInstance(context: Context): AppPreferences =
-            sharedInstance ?: synchronized(this) {
-                sharedInstance ?: AppPreferences(context.applicationContext).also {
+        fun getInstance(context: Context): AppPreferences {
+            val appContext = context.applicationContext
+            val userManager = appContext.getSystemService(Context.USER_SERVICE) as? android.os.UserManager
+            // DataStore migration needs credential-encrypted storage. Do not
+            // let an instance created before the first unlock own that migration.
+            if (userManager != null && !userManager.isUserUnlocked) {
+                return directBootInstance ?: synchronized(this) {
+                    directBootInstance ?: AppPreferences(appContext).also {
+                        directBootInstance = it
+                    }
+                }
+            }
+            return sharedInstance ?: synchronized(this) {
+                sharedInstance ?: AppPreferences(appContext).also {
                     sharedInstance = it
                 }
             }
+        }
     }
 
     @androidx.annotation.VisibleForTesting

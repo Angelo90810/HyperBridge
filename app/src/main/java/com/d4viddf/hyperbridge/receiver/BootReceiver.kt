@@ -66,6 +66,10 @@ class BootReceiver : BroadcastReceiver() {
                                 Log.d("HyperBridge", "Major trigger: Cooldown active, skipping toggle.")
                             }
                         } else if (isMinor) {
+                            if (action == Intent.ACTION_USER_UNLOCKED) {
+                                // Initialize the credential-unlocked singleton and migrations.
+                                com.d4viddf.hyperbridge.data.AppPreferences.getInstance(context)
+                            }
                             Log.d("HyperBridge", "Minor trigger: Requesting official re-bind.")
                             NotificationListenerBinding.requestRebind(context)
                         }
