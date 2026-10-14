@@ -19,6 +19,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Separate testing app, preserving the installed Play/release app.
+            applicationIdSuffix = ".perf"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
