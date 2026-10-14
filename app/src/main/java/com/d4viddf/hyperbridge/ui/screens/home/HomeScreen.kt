@@ -15,14 +15,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.ToggleOn
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Brush
 import androidx.compose.material.icons.outlined.ToggleOff
@@ -39,29 +36,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.d4viddf.hyperbridge.R
-import com.d4viddf.hyperbridge.ui.AppInfo
 import com.d4viddf.hyperbridge.ui.AppListViewModel
-import com.d4viddf.hyperbridge.ui.components.AppConfigBottomSheet
+import com.d4viddf.hyperbridge.ui.screens.design.DesignManagerScreen
+import com.d4viddf.hyperbridge.ui.screens.design.studio.StudioDesignScreen
 import com.d4viddf.hyperbridge.ui.screens.design.DesignScreen
 import com.d4viddf.hyperbridge.ui.screens.design.SavedAppWidgetsScreen
 import com.d4viddf.hyperbridge.ui.screens.design.WidgetConfigScreen
 import com.d4viddf.hyperbridge.ui.screens.design.WidgetPickerScreen
 import com.d4viddf.hyperbridge.ui.screens.theme.ThemeCreatorScreen
 import com.d4viddf.hyperbridge.ui.screens.theme.ThemeManagerScreen
+import kotlinx.coroutines.launch
 
 private enum class DesignRoute {
     DASHBOARD,
     WIDGET_LIST,
     THEME_MANAGER,
-    THEME_CREATOR
+    THEME_CREATOR,
+    DESIGN_MANAGER,
+    TRANSLATOR_MANAGER,
+    TRANSLATOR_EDITOR,
+    STUDIO_EDITOR
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,23 +71,33 @@ private enum class DesignRoute {
 fun HomeScreen(
     viewModel: AppListViewModel = viewModel(),
     onSettingsClick: () -> Unit,
-    onNavConfigClick: (String) -> Unit
+    onNavConfigClick: (String) -> Unit,
+    onScreenRecordingConfigClick: () -> Unit = {},
+    onSystemUpdateConfigClick: () -> Unit = {},
+    onAppConfigClick: (String) -> Unit = {},
+    onNavigateToTranslators: () -> Unit = {},
+    onCreateTranslator: (String?) -> Unit = {},
+    onEditTranslator: (String) -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(1) }
-    var designRoute by remember { mutableStateOf(DesignRoute.DASHBOARD) }
-    var editingThemeId by remember { mutableStateOf<String?>(null) }
 
-    var showWidgetPicker by remember { mutableStateOf(false) }
-    var editingWidgetId by remember { mutableStateOf<Int?>(null) }
-    var configApp by remember { mutableStateOf<AppInfo?>(null) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(1) }
+    var designRoute by rememberSaveable { mutableStateOf(DesignRoute.DASHBOARD) }
+    var editingThemeId by rememberSaveable { mutableStateOf<String?>(null) }
+    var editingTranslatorId by rememberSaveable { mutableStateOf<String?>(null) }
+    var editingCustomWidgetId by rememberSaveable { mutableStateOf<String?>(null) }
+    var newTranslatorPackageName by rememberSaveable { mutableStateOf<String?>(null) }
+    var previousTranslatorManagerRoute by rememberSaveable { mutableStateOf(DesignRoute.TRANSLATOR_MANAGER) }
+
+    var showWidgetPicker by rememberSaveable { mutableStateOf(false) }
+    var editingWidgetId by rememberSaveable { mutableStateOf<Int?>(null) }
 
     val activeApps by viewModel.activeAppsState.collectAsState()
     val libraryApps by viewModel.libraryAppsState.collectAsState()
+    val systemIntegrations by viewModel.systemIntegrationsState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
     val context = LocalContext.current
 
-    if (configApp != null) BackHandler { configApp = null }
     if (editingWidgetId != null) BackHandler { editingWidgetId = null }
     if (showWidgetPicker) BackHandler { showWidgetPicker = false }
 
@@ -95,6 +107,15 @@ fun HomeScreen(
                 DesignRoute.THEME_CREATOR -> {
                     editingThemeId = null
                     DesignRoute.THEME_MANAGER
+                }
+                DesignRoute.STUDIO_EDITOR -> {
+                    editingCustomWidgetId = null
+                    DesignRoute.DESIGN_MANAGER
+                }
+                DesignRoute.TRANSLATOR_EDITOR -> {
+                    editingTranslatorId = null
+                    newTranslatorPackageName = null
+                    previousTranslatorManagerRoute
                 }
                 else -> DesignRoute.DASHBOARD
             }
@@ -132,59 +153,15 @@ fun HomeScreen(
                 }
             }
         ) { padding ->
+            val prefs = remember { com.d4viddf.hyperbridge.data.AppPreferences.getInstance(context) }
+            val showWarning by prefs.featuredPermissionWarningFlow.collectAsState(initial = false)
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+
             androidx.compose.foundation.layout.Column(
                 modifier = Modifier
                     .padding(bottom = padding.calculateBottomPadding())
                     .fillMaxSize()
             ) {
-                val prefs = remember { com.d4viddf.hyperbridge.data.AppPreferences(context) }
-                val showWarning by prefs.featuredPermissionWarningFlow.collectAsState(initial = false)
-
-                if (showWarning) {
-                    androidx.compose.material3.Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        colors = androidx.compose.material3.CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        onClick = {
-                            val intent =
-                                Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                                    putExtra(
-                                        android.provider.Settings.EXTRA_APP_PACKAGE,
-                                        context.packageName
-                                    )
-                                }
-                            context.startActivity(intent)
-                        }
-                    ) {
-                        androidx.compose.foundation.layout.Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
-                            androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    stringResource(R.string.featured_notifications_troubleshoot_title),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                                Text(
-                                    stringResource(R.string.featured_notifications_troubleshoot_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                        }
-                    }
-                }
-
                 Box(modifier = Modifier.weight(1f)) {
                     when (selectedTab) {
                         0 -> {
@@ -200,7 +177,7 @@ fun HomeScreen(
                                 label = "DesignTabNav"
                             ) { route ->
                                 when (route) {
-                                    DesignRoute.DASHBOARD -> {
+                                     DesignRoute.DASHBOARD -> {
                                         DesignScreen(
                                             onNavigateToWidgets = {
                                                 designRoute = DesignRoute.WIDGET_LIST
@@ -212,8 +189,30 @@ fun HomeScreen(
                                                 editingThemeId = themeId
                                                 designRoute = DesignRoute.THEME_CREATOR
                                             },
+                                            onNavigateToDesigns = {
+                                                designRoute = DesignRoute.DESIGN_MANAGER
+                                            },
+                                            onNavigateToTranslators = {
+                                                designRoute = DesignRoute.TRANSLATOR_MANAGER
+                                            },
+                                            onCreateTranslator = {
+                                                editingTranslatorId = null
+                                                newTranslatorPackageName = null
+                                                previousTranslatorManagerRoute = DesignRoute.TRANSLATOR_MANAGER
+                                                designRoute = DesignRoute.TRANSLATOR_EDITOR
+                                            },
                                             onLaunchPicker = { showWidgetPicker = true },
                                             onSettingsClick = onSettingsClick
+                                        )
+                                    }
+
+                                    DesignRoute.STUDIO_EDITOR -> {
+                                        StudioDesignScreen(
+                                            widgetId = editingCustomWidgetId,
+                                            onBack = {
+                                                editingCustomWidgetId = null
+                                                designRoute = DesignRoute.DESIGN_MANAGER
+                                            }
                                         )
                                     }
 
@@ -229,7 +228,7 @@ fun HomeScreen(
                                         ThemeManagerScreen(
                                             onBack = { designRoute = DesignRoute.DASHBOARD },
                                             onFindThemes = {
-                                                val query = "HyperBridge Theme"
+                                                val query = "Hyper Bridge Theme"
                                                 try {
                                                     val intent = Intent(
                                                         Intent.ACTION_VIEW,
@@ -270,6 +269,57 @@ fun HomeScreen(
                                             }
                                         )
                                     }
+
+                                    DesignRoute.DESIGN_MANAGER -> {
+                                        DesignManagerScreen(
+                                            onBack = { designRoute = DesignRoute.DASHBOARD },
+                                            onAddDesign = {
+                                                // Create a new custom design in Studio
+                                                editingCustomWidgetId = null
+                                                designRoute = DesignRoute.STUDIO_EDITOR
+                                            },
+                                            onEditDesign = { id ->
+                                                editingTranslatorId = id
+                                                newTranslatorPackageName = null
+                                                previousTranslatorManagerRoute = DesignRoute.DESIGN_MANAGER
+                                                designRoute = DesignRoute.TRANSLATOR_EDITOR
+                                            },
+                                            onOpenStudio = { widgetId ->
+                                                editingCustomWidgetId = widgetId
+                                                designRoute = DesignRoute.STUDIO_EDITOR
+                                            }
+                                        )
+                                    }
+
+                                    DesignRoute.TRANSLATOR_MANAGER -> {
+                                        com.d4viddf.hyperbridge.ui.screens.translators.TranslatorManagerScreen(
+                                            onBack = { designRoute = DesignRoute.DASHBOARD },
+                                            onCreateTranslator = { pkg ->
+                                                editingTranslatorId = null
+                                                newTranslatorPackageName = pkg
+                                                previousTranslatorManagerRoute = DesignRoute.TRANSLATOR_MANAGER
+                                                designRoute = DesignRoute.TRANSLATOR_EDITOR
+                                            },
+                                            onEditTranslator = { id ->
+                                                editingTranslatorId = id
+                                                newTranslatorPackageName = null
+                                                previousTranslatorManagerRoute = DesignRoute.TRANSLATOR_MANAGER
+                                                designRoute = DesignRoute.TRANSLATOR_EDITOR
+                                            }
+                                        )
+                                    }
+
+                                    DesignRoute.TRANSLATOR_EDITOR -> {
+                                        com.d4viddf.hyperbridge.ui.screens.translators.TranslatorEditorScreen(
+                                            translatorId = editingTranslatorId,
+                                            initialPackageName = newTranslatorPackageName,
+                                            onBack = {
+                                                designRoute = previousTranslatorManagerRoute
+                                                editingTranslatorId = null
+                                                newTranslatorPackageName = null
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -277,18 +327,51 @@ fun HomeScreen(
                         1 -> ActiveAppsPage(
                             apps = activeApps,
                             isLoading = isLoading,
+                            systemIntegrations = systemIntegrations,
                             viewModel = viewModel,
-                            onConfig = { configApp = it },
+                            showWarning = showWarning,
+                            onWarningClick = {
+                                val intent =
+                                    Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                        putExtra(
+                                            android.provider.Settings.EXTRA_APP_PACKAGE,
+                                            context.packageName
+                                        )
+                                    }
+                                context.startActivity(intent)
+                            },
+                            onDismissWarning = {
+                                scope.launch {
+                                    prefs.setFeaturedPermissionWarning(false)
+                                }
+                            },
+                            onConfig = { onAppConfigClick(it.packageName) },
+                            onSystemConfig = { integration ->
+                                when (integration.id) {
+                                    com.d4viddf.hyperbridge.ui.SystemIntegrationId.SCREEN_RECORDER -> onScreenRecordingConfigClick()
+                                    com.d4viddf.hyperbridge.ui.SystemIntegrationId.SYSTEM_UPDATER -> onSystemUpdateConfigClick()
+                                    com.d4viddf.hyperbridge.ui.SystemIntegrationId.VPN -> {}
+                                }
+                            },
                             onSettingsClick = onSettingsClick
                         )
 
                         2 -> LibraryPage(
                             apps = libraryApps,
                             isLoading = isLoading,
+                            systemIntegrations = systemIntegrations,
                             viewModel = viewModel,
-                            onConfig = { configApp = it },
+                            onConfig = { onAppConfigClick(it.packageName) },
+                            onSystemConfig = { integration ->
+                                when (integration.id) {
+                                    com.d4viddf.hyperbridge.ui.SystemIntegrationId.SCREEN_RECORDER -> onScreenRecordingConfigClick()
+                                    com.d4viddf.hyperbridge.ui.SystemIntegrationId.SYSTEM_UPDATER -> onSystemUpdateConfigClick()
+                                    com.d4viddf.hyperbridge.ui.SystemIntegrationId.VPN -> {}
+                                }
+                            },
                             onSettingsClick = onSettingsClick
                         )
+
                     }
                 }
             }
@@ -337,24 +420,6 @@ fun HomeScreen(
                         onBack = { editingWidgetId = null }
                     )
                 }
-            }
-
-            // [FIXED] Safe handling of nullable state
-            if (configApp != null) {
-                // Capture the non-null value locally for the lambda scope
-                val currentConfigApp = configApp!!
-
-                AppConfigBottomSheet(
-                    app = currentConfigApp,
-                    viewModel = viewModel,
-                    onDismiss = { configApp = null },
-                    onNavConfigClick = {
-                        // Use the LOCAL variable, not the mutable state which might have changed
-                        onNavConfigClick(currentConfigApp.packageName)
-                        configApp = null
-                    }
-
-                )
             }
         }
     }

@@ -43,7 +43,7 @@ import androidx.core.graphics.scale
 class ThemeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repo = ThemeRepository(application)
-    private val prefs = AppPreferences(application)
+    private val prefs = AppPreferences.getInstance(application)
     @SuppressLint("StaticFieldLeak")
     private val context = application.applicationContext
     private val pm = context.packageManager

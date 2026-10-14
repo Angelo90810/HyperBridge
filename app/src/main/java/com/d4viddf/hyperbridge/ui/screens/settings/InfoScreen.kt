@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,17 +23,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.LowPriority
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
@@ -70,23 +73,29 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.os.LocaleListCompat
 import com.d4viddf.hyperbridge.R
+import com.d4viddf.hyperbridge.ui.theme.HyperBridgeTheme
+import com.d4viddf.hyperbridge.util.DocumentationUrls
 import com.d4viddf.hyperbridge.util.parseBold
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InfoScreen(
-    onBack: () -> Unit,
-    onSetupClick: () -> Unit,
-    onLicensesClick: () -> Unit,
-    onBehaviorClick: () -> Unit,
-    onGlobalSettingsClick: () -> Unit,
-    onHistoryClick: () -> Unit,
-    onBlocklistClick: () -> Unit,
-    onBackupClick: () -> Unit
+    onBack: () -> Unit = {},
+    onSetupClick: () -> Unit = {},
+    onLicensesClick: () -> Unit = {},
+    onBehaviorClick: () -> Unit = {},
+    onGlobalSettingsClick: () -> Unit = {},
+    onHistoryClick: () -> Unit = {},
+    onBlocklistClick: () -> Unit = {},
+    onBackupClick: () -> Unit = {},
+    onBugReportClick: () -> Unit = {},
+    onFloatingSetupClick: () -> Unit = {},
+    onDiagnosticsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
@@ -95,13 +104,13 @@ fun InfoScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     val appVersion = remember {
-        try { context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0" }
-        catch (_: Exception) { "1.0.0" }
+        try { context.packageManager?.getPackageInfo(context.packageName, 0)?.versionName ?: "1.0.0" }
+        catch (_: Throwable) { "1.0.0" }
     }
 
     val appIconBitmap = remember(context) {
-        try { context.packageManager.getApplicationIcon(context.packageName).toBitmap().asImageBitmap() }
-        catch (_: Exception) { null }
+        try { context.packageManager?.getApplicationIcon(context.packageName)?.toBitmap()?.asImageBitmap() }
+        catch (_: Throwable) { null }
     }
 
     Scaffold(
@@ -173,11 +182,45 @@ fun InfoScreen(
             SettingsSection(
                 title = stringResource(R.string.group_configuration),
                 items = listOf(
-                    SettingsItemData(Icons.Default.SettingsSuggest, stringResource(R.string.system_setup), stringResource(R.string.system_setup_subtitle), onSetupClick),
-                    SettingsItemData(Icons.Default.Tune, stringResource(R.string.island_behavior), stringResource(R.string.limit_strategy), onBehaviorClick),
-                    SettingsItemData(Icons.Default.Palette, stringResource(R.string.global_settings), stringResource(R.string.island_appearance), onGlobalSettingsClick),
+                    SettingsItemData(Icons.Default.Tune, stringResource(R.string.global_settings), stringResource(R.string.global_settings_desc), onGlobalSettingsClick),
+                    SettingsItemData(Icons.Default.SettingsSuggest, stringResource(R.string.floating_setup_title), stringResource(R.string.floating_setup_settings_subtitle), onFloatingSetupClick),
+                    SettingsItemData(Icons.Default.LowPriority, stringResource(R.string.limit_strategy), stringResource(R.string.limit_desc), onBehaviorClick),
                     SettingsItemData(Icons.Default.Block, stringResource(R.string.blocked_terms), stringResource(R.string.spoiler_subtitle), onBlocklistClick),
                     SettingsItemData(Icons.Default.Save, stringResource(R.string.backup_restore_title), stringResource(R.string.backup_section_title), onBackupClick)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- GUIDES GROUP ---
+            SettingsSection(
+                title = stringResource(R.string.group_guides),
+                items = listOf(
+                    SettingsItemData(
+                        Icons.Default.SettingsSuggest,
+                        stringResource(R.string.system_setup),
+                        stringResource(R.string.system_setup_subtitle),
+                        onSetupClick
+                    ),
+                    SettingsItemData(
+                        Icons.AutoMirrored.Filled.MenuBook,
+                        stringResource(R.string.documentation_title),
+                        stringResource(R.string.documentation_subtitle)
+                    ) {
+                        uriHandler.openUri(DocumentationUrls.DOCS)
+                    },
+                    SettingsItemData(
+                        Icons.Default.Code,
+                        stringResource(R.string.diagnostics_title),
+                        stringResource(R.string.diagnostics_subtitle),
+                        onDiagnosticsClick
+                    ),
+                    SettingsItemData(
+                        Icons.Default.BugReport,
+                        stringResource(R.string.bug_report_title),
+                        stringResource(R.string.bug_report_entry_subtitle),
+                        onBugReportClick
+                    )
                 )
             )
 
@@ -191,7 +234,8 @@ fun InfoScreen(
                     SettingsItemData(Icons.Default.Person, stringResource(R.string.developer), stringResource(R.string.developer_subtitle)) { uriHandler.openUri("https://d4viddf.com") },
                     SettingsItemData(Icons.Default.History, stringResource(R.string.version_history), "0.1.0 - $appVersion", onHistoryClick),
                     SettingsItemData(Icons.Default.Code, stringResource(R.string.source_code), stringResource(R.string.source_code_subtitle)) { uriHandler.openUri("https://github.com/D4vidDf/HyperBridge") },
-                    SettingsItemData(Icons.Default.Description, stringResource(R.string.licenses), stringResource(R.string.licenses_subtitle), onLicensesClick)
+                    SettingsItemData(Icons.Default.Description, stringResource(R.string.licenses), stringResource(R.string.licenses_subtitle), onLicensesClick),
+                    SettingsItemData(Icons.Default.Security, stringResource(R.string.privacy_policy_title), stringResource(R.string.privacy_policy_subtitle)) { uriHandler.openUri(DocumentationUrls.PRIVACY_POLICY) }
                 )
             )
 
@@ -207,9 +251,17 @@ fun InfoScreen(
                         stringResource(R.string.xmsf_workaround_credit_subtitle)
                     ) {
                         uriHandler.openUri("https://www.coolapk1s.com/feed/70418983")
+                    },
+                    SettingsItemData(
+                        Icons.Default.Favorite,
+                        stringResource(R.string.sykeptical_credit_title),
+                        stringResource(R.string.sykeptical_credit_subtitle)
+                    ) {
+                        uriHandler.openUri("https://github.com/SykepticalS")
                     }
                 )
             )
+
 
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -305,6 +357,7 @@ fun getSettingsShape(groupSize: Int, index: Int): Shape {
 fun LanguageSelectorDialog(onDismiss: () -> Unit) {
     val languages = mapOf(
         stringResource(R.string.system_default) to "",
+        "العربية" to "ar",
         "Bahasa Indonesia" to "id",
         "Čeština" to "cs",              // Added (Czech)
         "Deutsch" to "de",
@@ -381,4 +434,24 @@ fun LanguageSelectorDialog(onDismiss: () -> Unit) {
             TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
         }
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun InfoScreenPreview() {
+    HyperBridgeTheme {
+        InfoScreen(
+            onBack = {},
+            onSetupClick = {},
+            onLicensesClick = {},
+            onBehaviorClick = {},
+            onGlobalSettingsClick = {},
+            onHistoryClick = {},
+            onBlocklistClick = {},
+            onBackupClick = {},
+            onBugReportClick = {},
+            onFloatingSetupClick = {},
+            onDiagnosticsClick = {}
+        )
+    }
 }

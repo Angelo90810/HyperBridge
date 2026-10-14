@@ -44,7 +44,7 @@ fun EngineThemeContent(
     onEngineChange: (Boolean?) -> Unit
 ) {
     val context = LocalContext.current
-    val prefs = remember { AppPreferences(context) }
+    val prefs = remember { AppPreferences.getInstance(context) }
     val isShizukuInstalled = remember { com.d4viddf.hyperbridge.util.ShizukuManager.isShizukuInstalled(context) }
     val isShizukuRunning by com.d4viddf.hyperbridge.util.ShizukuManager.isShizukuRunning.collectAsState()
     val isPermissionGranted by com.d4viddf.hyperbridge.util.ShizukuManager.isPermissionGranted.collectAsState()
@@ -58,7 +58,7 @@ fun EngineThemeContent(
             .padding(16.dp)
     ) {
         Text(
-            text = stringResource(R.string.engine_preview_title),
+            text = stringResource(R.string.preview),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -135,7 +135,7 @@ fun EngineThemeContent(
 
             if (isShizukuInstalled && isWorkaroundEnabled) {
                 ListOptionCard(
-                    title = stringResource(if (isPermissionGranted) R.string.shizuku_permission_granted else R.string.shizuku_status_running),
+                    title = stringResource(if (isPermissionGranted) R.string.perm_granted else R.string.shizuku_status_running),
                     subtitle = stringResource(if (isPermissionGranted) R.string.shizuku_status_running else R.string.shizuku_permission_denied),
                     icon = if (isPermissionGranted) Icons.Default.Security else Icons.Default.Warning,
                     shape = RoundedCornerShape(16.dp),

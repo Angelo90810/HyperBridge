@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import rikka.shizuku.Shizuku
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -89,89 +90,86 @@ object ShizukuManager {
         }
     }
 
+    private const val TAG = "HyperBridgeShizuku"
     private var restoreNetworkJob: Job? = null
     private val notifyMutex = Mutex()
+    private val notificationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-    fun notify(context: Context, id: Int, notification: Notification) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val prefs = AppPreferences(context)
-            val workaroundEnabled = prefs.isShizukuWorkaroundEnabled.first()
-            
-            if (_isPermissionGranted.value && workaroundEnabled) {
-                notifyMutex.withLock  {
-                    // Cancel any pending restore job so we don't enable the network too early 
-                    // if another notification comes in before the 1 second delay is up.
-                    restoreNetworkJob?.cancel()
+    private suspend fun dispatchWithOptionalWorkaround(
+        context: Context,
+        operation: suspend () -> Unit
+    ) {
+        val enabled = _isPermissionGranted.value &&
+            AppPreferences.getInstance(context).isShizukuWorkaroundEnabled.first()
 
-                    // Briefly disable XMSF network to bypass MIUI/HyperOS interception
-                    XmsfNetworkHelper.setXmsfNetworkingEnabled(context, false)
-                    
-                    // Wait briefly to ensure the network command takes effect
+        notifyMutex.withLock {
+            if (!enabled) {
+                operation()
+                return@withLock
+            }
+
+            // All dispatches share the mutex; restoration is rescheduled after
+            // each burst, and even failed dispatches must restore XMSF.
+            restoreNetworkJob?.cancel()
+            restoreNetworkJob = null
+            try {
+                if (XmsfNetworkHelper.setXmsfNetworkingEnabled(context, false)) {
                     delay(50)
-                    
-                    // Dispatch notification
-                    NotificationManagerCompat.from(context).notify(id, notification)
-                    
-                    // Schedule network restore after 1 second
-                    restoreNetworkJob = launch {
-                        delay(1000)
-                        XmsfNetworkHelper.setXmsfNetworkingEnabled(context, true)
+                }
+                operation()
+            } finally {
+                restoreNetworkJob = notificationScope.launch {
+                    delay(1000)
+                    notifyMutex.withLock {
+                        if (!XmsfNetworkHelper.setXmsfNetworkingEnabled(context, true)) {
+                            android.util.Log.e(TAG, "Failed to restore XMSF networking")
+                        }
                     }
                 }
-            } else {
-                // Fallback to standard NotificationManagerCompat
-                NotificationManagerCompat.from(context).notify(id, notification)
             }
         }
     }
 
-    fun cancel(context: Context, id: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val prefs = AppPreferences(context)
-            val workaroundEnabled = prefs.isShizukuWorkaroundEnabled.first()
-            
-            if (_isPermissionGranted.value && workaroundEnabled) {
-                notifyMutex.withLock {
-                    restoreNetworkJob?.cancel()
-                    XmsfNetworkHelper.setXmsfNetworkingEnabled(context, false)
-                    delay(50)
-                    NotificationManagerCompat.from(context).cancel(id)
-                    restoreNetworkJob = launch {
-                        delay(1000)
-                        XmsfNetworkHelper.setXmsfNetworkingEnabled(context, true)
-                    }
-                }
-            } else {
-                NotificationManagerCompat.from(context).cancel(id)
+    private fun dispatchAsync(context: Context, operation: suspend () -> Unit) {
+        notificationScope.launch {
+            try {
+                dispatchWithOptionalWorkaround(context, operation)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                android.util.Log.e(TAG, "Notification operation failed", error)
             }
+        }
+    }
+
+    @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+    fun notify(context: Context, id: Int, notification: Notification) {
+        dispatchAsync(context) {
+            NotificationManagerCompat.from(context).notify(id, notification)
+        }
+    }
+
+    /** Ordered, same-ID dispatch for stateful island updates. */
+    @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+    suspend fun notifyInPlace(context: Context, id: Int, notification: Notification) {
+        dispatchWithOptionalWorkaround(context) {
+            NotificationManagerCompat.from(context).notify(id, notification)
+        }
+    }
+
+    fun cancel(context: Context, id: Int) {
+        dispatchAsync(context) {
+            NotificationManagerCompat.from(context).cancel(id)
         }
     }
 
     @androidx.annotation.RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
     fun notifyWithCancel(context: Context, id: Int, notification: Notification) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val prefs = AppPreferences(context)
-            val workaroundEnabled = prefs.isShizukuWorkaroundEnabled.first()
-            
-            if (_isPermissionGranted.value && workaroundEnabled) {
-                notifyMutex.withLock {
-                    restoreNetworkJob?.cancel()
-                    XmsfNetworkHelper.setXmsfNetworkingEnabled(context, false)
-                    delay(50)
-                    NotificationManagerCompat.from(context).cancel(id)
-                    delay(20) // Give it a moment to clear
-                    NotificationManagerCompat.from(context).notify(id, notification)
-                    restoreNetworkJob = launch {
-                        delay(1000)
-                        XmsfNetworkHelper.setXmsfNetworkingEnabled(context, true)
-                    }
-                }
-            } else {
-                NotificationManagerCompat.from(context).cancel(id)
-                delay(20)
-                NotificationManagerCompat.from(context).notify(id, notification)
-            }
+        dispatchAsync(context) {
+            val manager = NotificationManagerCompat.from(context)
+            manager.cancel(id)
+            delay(20)
+            manager.notify(id, notification)
         }
     }
 }

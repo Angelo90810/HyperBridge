@@ -10,7 +10,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.d4viddf.hyperbridge.MainActivity
 import com.d4viddf.hyperbridge.R
 import com.d4viddf.hyperbridge.data.AppPreferences
@@ -52,7 +51,7 @@ class WidgetOverlayService : Service() {
         super.onCreate()
         Log.d(TAG, "Widget Overlay Service Created")
 
-        preferences = AppPreferences(applicationContext)
+        preferences = AppPreferences.getInstance(applicationContext)
         widgetTranslator = WidgetTranslator(applicationContext)
         notificationManager = getSystemService(NotificationManager::class.java)
 
@@ -179,7 +178,7 @@ class WidgetOverlayService : Service() {
     private fun createWidgetChannel() {
         val channel = NotificationChannel(
             WIDGET_CHANNEL_ID,
-            "HyperBridge Widgets", // Separate Name in System Settings
+            "Hyper Bridge Widgets", // Separate Name in System Settings
             NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = "Overlay notifications for Widgets"

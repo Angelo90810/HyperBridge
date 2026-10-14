@@ -82,7 +82,7 @@ fun SavedAppWidgetsScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
 
     val favorites by preferences.favoriteWidgetAppsFlow.collectAsState(initial = emptySet())
     val savedIds by preferences.savedWidgetIdsFlow.collectAsState(initial = null) // Reactive listening for newly added widgets!
@@ -484,7 +484,7 @@ fun SavedWidgetChildItem(
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
-    val preferences = remember { AppPreferences(context.applicationContext) }
+    val preferences = remember { AppPreferences.getInstance(context.applicationContext) }
 
     val config by preferences.getWidgetConfigFlow(widgetId).collectAsState(initial = null)
 

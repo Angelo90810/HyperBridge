@@ -126,7 +126,7 @@ class InlineReplyService : Service(), LifecycleOwner, ViewModelStoreOwner, Saved
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
             setContent {
-                val preferences = remember { com.d4viddf.hyperbridge.data.AppPreferences(this@InlineReplyService) }
+                val preferences = remember { com.d4viddf.hyperbridge.data.AppPreferences.getInstance(this@InlineReplyService) }
                 val themeRepository = remember { com.d4viddf.hyperbridge.data.theme.ThemeRepository(this@InlineReplyService) }
                 val activeThemeId by preferences.activeThemeIdFlow.collectAsState(initial = null)
                 val activeTheme by themeRepository.activeTheme.collectAsState()

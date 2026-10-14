@@ -56,14 +56,14 @@ fun PrioritySettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
 
     val currentMode by preferences.limitModeFlow.collectAsState(initial = IslandLimitMode.MOST_RECENT)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.island_behavior)) },
+                title = { Text(stringResource(R.string.limit_strategy)) },
                 navigationIcon = {
                     FilledTonalIconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))

@@ -76,7 +76,7 @@ fun GlobalBlocklistScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val preferences = remember { AppPreferences(context) }
+    val preferences = remember { AppPreferences.getInstance(context) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val globalBlockedTerms by preferences.globalBlockedTermsFlow.collectAsState(initial = emptySet())
